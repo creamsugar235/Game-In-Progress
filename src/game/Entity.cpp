@@ -5,6 +5,14 @@ namespace game
 	{
 	}
 	
+	Entity::Entity(std::string name, sf::Texture * texture, Collider collider, bool drawable, unsigned long long tag)
+	{
+		this->_name = name;
+		this->_texture = texture;
+		this->_collider = collider;
+		this->_drawable = drawable;
+		this->_tag = tag;
+	}
 
 	Entity::~Entity()
 	{
@@ -12,43 +20,55 @@ namespace game
 
 	bool Entity::operator==(const Entity& other) const
 	{
-		return (other.GetHash() == this->GetHash()) && (other.drawable() == this->_drawable) && (other.texture() == this->texture());
+		return (other.GetHash() == this->GetHash()) && (other.IsDrawable() == this->_drawable);
 	}
 
-	bool Entity::drawable() const
+	bool Entity::operator==(Entity& other)
+	{
+		return (other.GetHash() == this->GetHash()) && (other.IsDrawable() == this->_drawable);
+	}
+
+	bool Entity::IsDrawable() const
 	{
 		return this->_drawable;
 	}
 
-	int Entity::texture() const
+	sf::Texture* Entity::GetTexture() const
 	{
 		return this->_texture;
 	}
 
-	std::string Entity::name() const
+	std::string& Entity::GetName()
 	{
 		return _name;
 	}
 
-	int Entity::GetHash() const
+	std::string Entity::GetName() const
+	{
+		return _name;
+	}
+
+	const int Entity::GetHash() const
 	{
 		return this->_collider.GetHash();
 	}
 
-	Collider Entity::GetCollider() const
+	const Collider& Entity::GetCollider() const
 	{
 		return this->_collider;
 	}
 
+	Collider& Entity::GetCollider()
+	{
+		return this->_collider;
+	}
+
+	geo::Point& Entity::GetScale() const
+	{
+		return this->_scale;
+	}
+
 	void Entity::OnMouseDown()
-	{
-	}
-
-	void Entity::OnMouseEnter()
-	{
-	}
-
-	void Entity::OnMouseExit()
 	{
 	}
 
@@ -69,11 +89,16 @@ namespace game
 	{
 		for (Entity e : this->children)
 		{
-			e->Update();
-			if (e->children.size() > 0)
+			e.Update();
+			if (e.children.size() > 0)
 			{
-				e->UpdateChildren();
+				e.UpdateChildren();
 			}
 		}
+	}
+
+	unsigned long long Entity::GetTag()
+	{
+		return _tag;
 	}
 }

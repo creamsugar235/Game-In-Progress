@@ -4,11 +4,15 @@ namespace game
 {
 	Player::Player()
 	{
-		_texture = enums::player;
+		_texture = NULL;
 	}
 
 	void Player::Update()
 	{
+		if (!_texture)
+		{
+			_texture = &Game::textures[enums::player];
+		}
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
 		{
 			_collider.Move(speed * Time::deltaTime, 0);
@@ -25,7 +29,7 @@ namespace game
 				_jump.speed = 0.5 * Time::deltaTime;
 				_jump.speedDegredation = 0.005;
 				_jump.direction = geo::Point(0, 1);
-				_collider.vectors.insert(std::pair<std::string, Vector*>("jump", &_jump));
+				_collider.vectors.insert(std::pair<std::string, std::reference_wrapper<Vector>>("jump", std::reference_wrapper(_jump)));
 			}
 			else
 			{
@@ -45,7 +49,7 @@ namespace game
 			_gravity.direction = geo::Point(0, -1);
 			if (!_collider.vectors.count("gravity"))
 			{
-				_collider.vectors.insert(std::pair<std::string, Vector*>("gravity", &_gravity));
+				_collider.vectors.insert(std::pair<std::string, std::reference_wrapper<Vector>>("gravity", std::reference_wrapper(_gravity)));
 			}
 		}
 		else

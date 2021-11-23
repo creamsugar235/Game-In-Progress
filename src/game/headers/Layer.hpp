@@ -1,5 +1,6 @@
+#pragma once
 #include "GEO/main.hpp"
-#include <string>
+#include <functional>
 namespace game
 {
 	class Entity;
@@ -9,6 +10,6 @@ namespace game
 	{
 		public:
 			std::string name = "";
-			std::vector<geo::Pointer<Entity>> entities = std::vector<geo::Pointer<Entity>>(0);
+			std::vector<std::reference_wrapper<Entity>> entities;
 	};
 }

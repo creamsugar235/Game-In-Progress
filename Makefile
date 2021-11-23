@@ -27,18 +27,25 @@ compilegeo:
 	cp src/geometrylib/*.inl src/include/GEO
 
 compilegame:
-	g++ -c -Wall -std=c++17 -I src/include src/game/Collider.cpp -o bin/o/Colliderg.o
-	g++ -c -Wall -std=c++17 -I src/include src/game/Entity.cpp -o bin/o/Entityg.o
-	g++ -c -Wall -std=c++17 -I src/include src/game/Game.cpp -o bin/o/Gameg.o
-	g++ -c -Wall -std=c++17 -I src/include src/game/Layer.cpp -o bin/o/Layerg.o
-	g++ -c -Wall -std=c++17 -I src/include src/game/Player.cpp -o bin/o/Playerg.o
-	g++ -c -Wall -std=c++17 -I src/include src/game/Time.cpp -o bin/o/Timeg.o
-	g++ -c -Wall -std=c++17 -I src/include src/game/Vector.cpp -o bin/o/Vectorg.o
-	ar rcs src/lib/game.a bin/o/*g.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Clickable.cpp -o bin/o/ClickableG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Collider.cpp -o bin/o/ColliderG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/ComplexLine.cpp -o bin/o/ComplexLineG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Curve.cpp -o bin/o/CurveG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Entity.cpp -o bin/o/EntityG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Game.cpp -o bin/o/GameG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Layer.cpp -o bin/o/LayerG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Player.cpp -o bin/o/PlayerG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Noise.cpp -o bin/o/NoiseG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Time.cpp -o bin/o/TimeG.o
+	g++ -c -Wall -std=c++17 -I src/include src/game/Vector.cpp -o bin/o/VectorG.o
+	ar rcs src/lib/game.a bin/o/*G.o
 	ranlib src/lib/game.a
 
 compile:
 	g++ -lX11 -pthread -Wl,-rpath,bin -Wall -std=c++17 -L src/lib/game.a -L src/lib/geometrylib.a -I src/include -o bin/main bin/o/*.o src/main.cpp -L src/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network
+
+compilemain:
+	g++ -lX11 -pthread -Wl,-rpath,bin -Wall -std=c++17 -I src/include -o bin/main src/main.cpp -L src/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network
 
 debug:
 	g++ -g -Wl,-rpath,bin -Wall -std=c++17 -L src/lib/game.a -L src/lib/geometrylib.a -I src/include -o bin/main bin/o/*.o src/main.cpp -L src/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio -lsfml-network

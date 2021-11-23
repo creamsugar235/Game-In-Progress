@@ -8,34 +8,34 @@ namespace geo
 
 	Line::Line(const Point& a, const Point& b)
 	{
-		this->_a = a;
-		this->_b = b;
-		this->_length = Calc::Distance(this->_a, this->_b);
-		this->_angle = Calc::GetAngle(this->_a, this->_b);
+		this->a = a;
+		this->b = b;
+		this->_length = Calc::Distance(this->a, this->b);
+		this->_angle = Calc::GetAngle(this->a, this->b);
 	}
 
 	Line::Line(Pointer<Point> a, Pointer<Point> b)
 	{
-		this->_a = a;
-		this->_b = b;
-		this->_length = Calc::Distance(this->_a, this->_b);
-		this->_angle = Calc::GetAngle(this->_a, this->_b);
+		this->a = a;
+		this->b = b;
+		this->_length = Calc::Distance(this->a, this->b);
+		this->_angle = Calc::GetAngle(this->a, this->b);
 	}
 
 	Line::Line(const Line& l)
 	{
-		this->_a = l.a();
-		this->_b = l.b();
-		this->_length = Calc::Distance(this->_a, this->_b);
-		this->_angle = Calc::GetAngle(this->_a, this->_b);
+		this->a = l.a();
+		this->b = l.b();
+		this->_length = Calc::Distance(this->a, this->b);
+		this->_angle = Calc::GetAngle(this->a, this->b);
 	}
 
 	Line::Line(Pointer<Line> l)
 	{
-		this->_a = l->a();
-		this->_b = l->b();
-		this->_length = Calc::Distance(this->_a, this->_b);
-		this->_angle = Calc::GetAngle(this->_a, this->_b);
+		this->a = l->a();
+		this->b = l->b();
+		this->_length = Calc::Distance(this->a, this->b);
+		this->_angle = Calc::GetAngle(this->a, this->b);
 	}
 
 	Line::~Line()
@@ -44,17 +44,12 @@ namespace geo
 
 	bool Line::operator==(const Line& l) const
 	{
-		return (this->_a == l.a() && this->_b == l.b());
+		return (this->a == l.a() && this->b == l.b());
 	}
 
 	bool Line::operator!=(const Line& l) const
 	{
-		return !(this->_a == l.a() && this->_b == l.b());
-	}
-
-	Point Line::a() const
-	{
-		return this->_a;
+		return !(this->a == l.a() && this->b == l.b());
 	}
 
 	double Line::angle() const
@@ -62,14 +57,9 @@ namespace geo
 		return _angle;
 	}
 
-	Point Line::b() const
-	{
-		return this->_b;
-	}
-
 	Point Line::GetPointAlongLine(double distance, bool startFromA) const
 	{
-		Point begin = startFromA ? this->_a : this->_b;
+		Point begin = startFromA ? this->a : this->b;
 		return Calc::GetPointOnCircle(begin, distance, this->_angle);
 	}
 
@@ -80,37 +70,37 @@ namespace geo
 
 	void Line::Move(double offsetX, double offsetY)
 	{
-		this->_a.Move(offsetX, offsetY);
-		this->_b.Move(offsetX, offsetY);
+		this->a.Move(offsetX, offsetY);
+		this->b.Move(offsetX, offsetY);
 	}
 
 	std::string Line::ToString() const
 	{
-		return "(" + this->_a.ToString() + ", " + this->_b.ToString() + ")";
+		return "(" + this->a.ToString() + ", " + this->b.ToString() + ")";
 	}
 
 	std::tuple<std::tuple<double, double>, std::tuple<double, double>> Line::ToTuple() const
 	{
-		return std::tuple<std::tuple<double, double>, std::tuple<double, double>>(this->_a.ToTuple(), this->_b.ToTuple());
+		return std::tuple<std::tuple<double, double>, std::tuple<double, double>>(this->a.ToTuple(), this->b.ToTuple());
 	}
 
 	void Line::Rotate(const Point& pivot, double angle)
 	{
-		this->_a.Rotate(pivot, angle);
-		this->_b.Rotate(pivot, angle);
+		this->a.Rotate(pivot, angle);
+		this->b.Rotate(pivot, angle);
 		Update();
 	}
 
 	void Line::Rotate(Pointer<Point> pivot, double angle)
 	{
-		this->_a.Rotate(pivot, angle);
-		this->_b.Rotate(pivot, angle);
+		this->a.Rotate(pivot, angle);
+		this->b.Rotate(pivot, angle);
 		Update();
 	}
 
 	void Line::Update()
 	{
-		this->_length = Calc::Distance(this->_a, this->_b);
-		this->_angle = Calc::GetAngle(this->_a, this->_b);
+		this->_length = Calc::Distance(this->a, this->b);
+		this->_angle = Calc::GetAngle(this->a, this->b);
 	}
 }

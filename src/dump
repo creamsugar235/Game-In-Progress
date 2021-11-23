@@ -1,0 +1,180 @@
+#include "game/main.hpp"
+#include <random>
+#include <thread>
+#include <iostream>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+using namespace std;
+using namespace sf;
+
+int numX = 512,
+numY = 512,
+numOctaves = 7;
+double persistence = 0.5;
+
+#define maxPrimeIndex 10
+int primeIndex = 0;
+
+int primes[maxPrimeIndex][3] = {
+	{ 995615039, 600173719, 701464987 },
+	{ 831731269, 162318869, 136250887 },
+	{ 174329291, 946737083, 245679977 },
+	{ 362489573, 795918041, 350777237 },
+	{ 457025711, 880830799, 909678923 },
+	{ 787070341, 177340217, 593320781 },
+	{ 405493717, 291031019, 391950901 },
+	{ 458904767, 676625681, 424452397 },
+	{ 531736441, 939683957, 810651871 },
+	{ 997169939, 842027887, 423882827 }
+};
+
+double Noise(int i, int x, int y) {
+	int n = x + y * 57;
+	n = (n << 13) ^ n;
+	int a = primes[i][0], b = primes[i][1], c = primes[i][2];
+	int t = (n * (n * n * a + b) + c) & 0x7fffffff;
+	return 1.0 - (double)(t)/1073741824.0;
+}
+
+double SmoothedNoise(int i, int x, int y)
+{
+	double corners = (Noise(i, x-1, y-1) + Noise(i, x+1, y-1) +
+		Noise(i, x-1, y+1) + Noise(i, x+1, y+1)) / 16,
+	sides = (Noise(i, x-1, y) + Noise(i, x+1, y) + Noise(i, x, y-1) +
+		Noise(i, x, y+1)) / 8,
+	center = Noise(i, x, y) / 4;
+	return corners + sides + center;
+}
+
+double Interpolate(double a, double b, double x)// cosine interpolation
+{
+	double ft = x * 3.1415927,
+	f = (1 - cos(ft)) * 0.5;
+	return  a*(1-f) + b*f;
+}
+
+double InterpolatedNoise(int i, double x, double y) {
+	int integer_X = x;
+	double fractional_X = x - integer_X;
+	int integer_Y = y;
+	double fractional_Y = y - integer_Y;
+
+	double v1 = SmoothedNoise(i, integer_X, integer_Y),
+		v2 = SmoothedNoise(i, integer_X + 1, integer_Y),
+		v3 = SmoothedNoise(i, integer_X, integer_Y + 1),
+		v4 = SmoothedNoise(i, integer_X + 1, integer_Y + 1),
+		i1 = Interpolate(v1, v2, fractional_X),
+		i2 = Interpolate(v3, v4, fractional_X);
+	return Interpolate(i1, i2, fractional_Y);
+}
+
+double ValueNoise_2D(double x, double y)
+{
+  	double total = 0, frequency = pow(2, numOctaves), amplitude = 1;
+ 	for (int i = 0; i < numOctaves; ++i)
+	 {
+		frequency /= 2;
+		amplitude *= persistence;
+		total += InterpolatedNoise((primeIndex + i) % maxPrimeIndex,
+		x / frequency, y / frequency) * amplitude;
+	}
+	return abs(total / frequency);
+}
+
+Vertex * ToLines(game::ComplexLine& cL)
+{
+	Vertex lines[cL.Count()];
+	for (int i = 0; i < cL.Count(); i++)
+	{
+		//std::cout<<cL[i].ToString()<<std::endl;
+		lines[i] = Vertex(Vector2f(cL[i].a.x, cL[i].a.y));
+	}
+	return &lines[0];
+}
+
+std::ostream& operator<<(std::ostream& os, game::ComplexLine const& c)
+{
+	std::string s;
+	for (size_t i = 0; i < c.Count(); i++)
+	{
+		s = s + " " + c[i].ToString();
+	}
+	return os << s;
+}
+
+int main(int num, const char** args)
+{
+	srand(time(NULL));
+	//game::Game g("baro");
+	//g.Run();
+	RenderWindow window;
+	window.create(VideoMode(500, 500), "chunky's dead");
+	sf::View view = window.getDefaultView();
+	view.setSize(500, 500); 
+	window.setView(view);
+	RectangleShape r(Vector2f(500, 500));
+	r.setFillColor(Color::Black);
+	window.draw(r);
+	Vertex line[] =
+	{
+		Vertex(Vector2f(250, 250)),
+		Vertex(Vector2f(ValueNoise_2D(250, 250), ValueNoise_2D(250, 250) + 250))
+	};
+	game::ComplexLine c;
+	c.Add(geo::Line(geo::Point(250, 250), geo::Point(ValueNoise_2D(250, 250), ValueNoise_2D(250, 250) + 250)));
+	//int i = 0;
+	while (window.isOpen())
+	{
+		Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::Closed)
+			{
+				window.close();
+			}
+		}
+		geo::Point a;
+		line[0] = line[1];
+		a.x = line[0].position.x;
+		a.y = line[0].position.y;
+		line[1].position.x += 5;
+		line[1].position.y = 150 + InterpolatedNoise((int)rand() % 10, abs(rand() % 50), line[0].position.y * (rand())) * 100;
+		geo::Point b;
+		b.x = line[1].position.x;
+		b.y = line[1].position.y;
+		//std::cout<<"gotHERE"<<std::endl;
+		//std::cout<<a.ToString()<<", "<<b.ToString()<<std::endl;
+		c.Add(geo::Line(b, a));
+		//std::cout<<line[0].position.x<<" "<<line[0].position.y<<std::endl;
+		//window.draw(line, 2, Lines);
+		//std::cout<<"GRUP"<<std::endl;
+		window.draw(ToLines(c), c.Count(), Lines);
+		window.display();
+		if(line[1].position.x > 500)
+		{
+			for (int i = 0; i < 5; i++){
+				window.draw(r);
+				std::cout<<c.Count()<<std::endl;
+				for (size_t j = 0; j < c.Count(); j++)
+				{
+					Vertex ln[] = {
+						Vertex(Vector2f(c[j].a.x, c[j].a.y)),
+						Vertex(Vector2f(c[j].b.x, c[j].b.y))
+					};
+					window.draw(ln, 2, Lines);
+				}
+				window.display();
+				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+				c.Smooth(i * 20);
+			}
+				//c.Smooth(i * 10);
+			//line[1].position = Vector2f(0, 250);
+			//window.clear();
+			window.draw(r);
+			//i++;
+		}
+		//if (i % 1000 == 0 && i != 0) {std::cout<<i<<std::endl;}
+	}
+	return 0;
+}

@@ -55,8 +55,13 @@ namespace geo
 	{
 		Point max = *max_element(this->_points.begin(), this->_points.end());
 		Line line = Line(p, Point(max.x + (1 * max.x > p.x ? 1 : -1), p.y));
+		std::vector<Line> trueLines;
+		for (auto pt = _points.begin() + 1;pt != _points.end(); pt++)
+		{
+			trueLines.push_back(Line(Point(_x + (pt - 1)->x, _y + (pt- 1)->y), Point(_x + pt->x, _y + pt->y)));
+		}
 		std::vector<Point> listOfIntersections = std::vector<Point>();
-		for (auto l = this->_lines.begin(); l != this->_lines.end(); l++)
+		for (auto l = trueLines.begin(); l != trueLines.end(); l++)
 		{
 			if (Calc::Intersecting(*l, line))
 			{
@@ -94,6 +99,18 @@ namespace geo
 			i++;
 		}
 		return v;
+	}
+
+	void ConvexShape::Rotate(const Point& p, double angle)
+	{
+		for (auto pt = _points.begin(); pt != _points.end(); pt++)
+		{
+			pt->Rotate(p, angle);
+		}
+		for (auto l = _lines.begin(); l != _lines.end(); l++)
+		{
+			l->Rotate(p, angle);
+		}
 	}
 
 	void ConvexShape::Scale(double xFactor, double yFactor)

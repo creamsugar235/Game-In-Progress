@@ -1,6 +1,5 @@
 #pragma once
 #include <algorithm>
-#include <bits/stdc++.h>
 #include <cmath>
 #include <exception>
 #include <string>
@@ -57,6 +56,7 @@ namespace geo
 			bool operator!=(const Point& p) const;
 			bool operator<(const Point& p) const;
 			bool operator>(const Point& p) const;
+			Point operator()() const;
 			void Move(double offsetX, double offsetY);
 			int Quadrant(Pointer<Point> p) const;
 			int Quadrant(const Point& p) const;
@@ -69,8 +69,6 @@ namespace geo
 	class Line
 	{
 		private:
-			Point _a;
-			Point _b;
 			double _length = 0;
 			double _angle = 0;
 		public:
@@ -80,11 +78,11 @@ namespace geo
 			Line(const Line& l);
 			Line(Pointer<Line> l);
 			~Line();
+			Point a;
+			Point b;
 			bool operator==(const Line& l) const;
 			bool operator!=(const Line& l) const;
-			Point a() const;
 			double angle() const;
-			Point b() const;
 			Point GetPointAlongLine(double distance, bool startFromA = true) const;
 			double length() const;
 			void Move(double offsetX, double offsetY);
@@ -102,7 +100,7 @@ namespace geo
 	{
 		private:
 			T * _ptr = NULL;
-			unsigned long long size = 0ULL;
+			size_t size = 0ULL;
 			bool _shouldDelete = true;
 		public:
 			explicit Pointer<T>();
@@ -113,7 +111,7 @@ namespace geo
 			T& operator*();
 			T* operator->();
 			void Set(T * ptr, T * end);
-			unsigned long long Size();
+			size_t Size();
 			[[nodiscard]]
 			T* Switch(T * ptr);
 			T* Switch(T& val);
@@ -159,6 +157,7 @@ namespace geo
 			bool IsIn(const Point& p) const;
 			void Move(double offsetX, double offsetY);
 			std::vector<Point> ReturnPoints() const;
+			void Rotate(const Point& p, double angle);
 			void Scale(double xFactor, double yFactor);
 			std::string ToString() const;
 

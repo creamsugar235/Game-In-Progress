@@ -31,32 +31,32 @@ namespace game
 	{
 		for (auto v = vectors.begin(); v != vectors.end(); v++)
 		{
-			if (v->second->isActive)
+			if (v->second.get().isActive)
 			{
-				this->Move(v->second->direction.x * v->second->speed, v->second->direction.y * v->second->speed);
-				if (v->second->rotation)
+				this->Move(v->second.get().direction.x * v->second.get().speed, v->second.get().direction.y * v->second.get().speed);
+				if (v->second.get().rotation)
 				{
 					for (auto p = _points.begin(); p != _points.end(); p++)
 					{
-						p->Rotate(v->second->start, v->second->rotation);
+						p->Rotate(v->second.get().start, v->second.get().rotation);
 					}
 				}
-				v->second->Update();
+				v->second.get().Update();
 			}
 		}
 	}
 
-	void Collider::OnCollisionEnter(geo::Pointer<Entity>& entity)
+	void Collider::OnCollisionEnter(Entity& entity)
 	{
-		this->_collidedEntities.push_back(entity);
+		this->_collidedEntities.push_back(std::reference_wrapper<Entity>(entity));
 	}
 
-	void Collider::OnCollisionExit(geo::Pointer<Entity>& entity)
+	void Collider::OnCollisionExit(Entity& entity)
 	{
 		bool contains = false;
 		for (unsigned long long i = 0; i < this->_collidedEntities.size(); i++)
 		{
-			if (*entity == *this->_collidedEntities[i])
+			if (entity == this->_collidedEntities[i].get())
 			{
 				contains = true;
 				break;
@@ -67,12 +67,12 @@ namespace game
 			geo::Pointer<Entity> * arr = new geo::Pointer<Entity>[this->_collidedEntities.size()];
 			for (unsigned long long i = 0; i < this->_collidedEntities.size(); i++)
 			{
-				arr[i] = this->_collidedEntities[i];
+				*arr[i] = this->_collidedEntities[i].get();
 			}
 			unsigned long long index = 0;
 			for (unsigned long long i = 0; i < this->_collidedEntities.size(); i++)
 			{
-				if (*arr[i] == *entity)
+				if (*arr[i] == entity)
 				{
 					index = i;
 					break;
@@ -82,7 +82,7 @@ namespace game
 		}
 	}
 
-	void Collider::OnCollisionStay(geo::Pointer<Entity>& entity)
+	void Collider::OnCollisionStay(Entity& entity)
 	{
 	}
 
@@ -103,5 +103,17 @@ namespace game
 			h = h * 31 + static_cast<int>(s[i]);
 		}
 		return h;
+	}
+
+	bool Collider::IsColliding(const Collider &c)
+	{
+		for (geo::Point p : c.ReturnPoints())
+		{
+			if (IsIn(p))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }

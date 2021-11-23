@@ -6,7 +6,7 @@ namespace game
 		this->_name = name;
 	}
 
-	void Game::Display()
+	void Game::GameDisplay()
 	{
 		_window.clear();
 		auto iter = _level.layers.begin();
@@ -18,25 +18,29 @@ namespace game
 			while (iter2 != iter->second.entities.end())
 			{
 				//REMEMBER TO FILTER FOR WHACK TEXTURE ENUM VALUES
-				if (iter2->drawable())
+				if (iter2->get().IsDrawable() && IsInView(iter2->get()))
 				{
-					if (iter2->children.size())
+					if (!iter2->get().children.size())
 					{
-						RecursiveDisplay(&(*iter2));
-					}
-					else
-					{
-						sf::Sprite s = sf::Sprite(textures[iter2->texture()]);
-						s.setPosition(sf::Vector2f(iter2->_collider._x, iter2->_collider._y));
+						sf::Sprite s = sf::Sprite(*iter2->get().GetTexture());
+						s.setPosition(sf::Vector2f(iter2->get().GetCollider().x(), iter2->get().GetCollider().y()));
+						s.setScale(sf::Vector2f(iter2->get().GetScale().x, iter2->get().GetScale().y));
+						s.rotate(geo::Calc::Degrees(iter2->get().GetRotation()));
 						this->_window.draw(s);
 					}
+				}
+				if (iter2->get().children.size())
+				{
+					RecursiveDisplay(&(iter2->get()));
 				}
 				iter2++;
 			}
 			iter++;
 		}
-		sf::Sprite p = sf::Sprite(textures[_p.texture()]);
-		p.setPosition(sf::Vector2f(_p._collider.ReturnPoints()[0].x, _p._collider.ReturnPoints()[0].y));
+		sf::Sprite p = sf::Sprite(*_p.GetTexture());
+		p.setPosition(sf::Vector2f(_p.GetCollider().x(), _p.GetCollider().y()));
+		p.setScale(sf::Vector2f(_p.GetScale().x, _p.GetScale().y));
+		p.rotate(geo::Calc::Degrees(_p.GetRotation()));
 		this->_window.draw(p);
 		_window.display();
 	}
@@ -54,34 +58,60 @@ namespace game
 		}
 	}
 
+	bool Game::IsInView(const game::Entity& e)
+	{
+		Collider camBox;
+		sf::FloatRect c = this->_camera.getViewport();
+		camBox.AddPoint(geo::Point((double)c.left, (double)c.top));
+		camBox.AddPoint(geo::Point((double)c.left +(double)c.width, c.top));
+		camBox.AddPoint(geo::Point((double)c.left + c.width, (double)c.top + c.height));
+		camBox.AddPoint(geo::Point((double)c.left, (double)c.top + c.height));
+		return camBox.IsColliding(e.GetCollider());
+	}
+
 	void Game::SetUp()
 	{
-		_p._collider.AddPoint(geo::Point(10, 0));
-		_p._collider.AddPoint(geo::Point(10, 30));
-		_p._collider.AddPoint(geo::Point(40, 0));
-		_p._collider.AddPoint(geo::Point(40, 30));
+		_p.GetCollider().AddPoint(geo::Point(10, 0));
+		_p.GetCollider().AddPoint(geo::Point(10, 30));
+		_p.GetCollider().AddPoint(geo::Point(40, 0));
+		_p.GetCollider().AddPoint(geo::Point(40, 30));
 	}
 
 	void Game::RecursiveDisplay(Entity * e)
 	{
 		if (e->children.size())
 		{
-			sf::Sprite s = sf::Sprite(textures[e->texture()]);
-			s.setPosition(sf::Vector2f(e->_collider._x, e->_collider._y));
-			this->_window.draw(s);
+			if (e->IsDrawable() && IsInView(*e))
+			{
+				sf::Sprite s = sf::Sprite(*e->GetTexture());
+				s.setPosition(sf::Vector2f(e->GetCollider().x(), e->GetCollider().y()));
+				s.setScale(sf::Vector2f(e->GetScale().x, e->GetScale().y));
+				s.rotate(geo::Calc::Degrees(e->GetRotation()));
+				this->_window.draw(s);
+			}
 			for (Entity child: e->children)
 			{
-				sf::Sprite s = sf::Sprite(textures[child->texture()]);
-				s.setPosition(sf::Vector2f(child->_collider._x, child->_collider._y));
-				this->_window.draw(s);
-				RecursiveDisplay(&(*child));
-			}	
+				if (child.IsDrawable() && IsInView(*e))
+				{
+					sf::Sprite s = sf::Sprite(*child.GetTexture());
+					s.setPosition(sf::Vector2f(child.GetCollider().x(), child.GetCollider().y()));
+					s.setScale(sf::Vector2f(child.GetScale().x, child.GetScale().y));
+					s.rotate(geo::Calc::Degrees(child.GetRotation()));
+					this->_window.draw(s);
+				}
+				RecursiveDisplay(&child);
+			}
 		}
 		else
 		{
-			sf::Sprite s = sf::Sprite(textures[e->texture()]);
-			s.setPosition(sf::Vector2f(e->_collider._x, e->_collider._y));
-			this->_window.draw(s);
+			if (e->IsDrawable() && IsInView(*e))
+			{
+				sf::Sprite s = sf::Sprite(*e->GetTexture());
+				s.setPosition(sf::Vector2f(e->GetCollider().x(), e->GetCollider().y()));
+				s.setScale(sf::Vector2f(e->GetScale().x, e->GetScale().y));
+				s.rotate(geo::Calc::Degrees(e->GetRotation()));
+				this->_window.draw(s);
+			}
 		}
 	}
 
@@ -91,10 +121,10 @@ namespace game
 		Time __t__();
 		Load();
 		SetUp();
-		_window.create(sf::VideoMode(200, 200), "bruh");
-		sf::View view = _window.getDefaultView();
-		view.setSize(200, -200); 
-		_window.setView(view);
+		_window.create(sf::VideoMode(500, 500), "bruh");
+		_camera = _window.getDefaultView();
+		_camera.setSize(500, -500); 
+		_window.setView(_camera);
 		while (_window.isOpen())
 		{
 			sf::Event event;
@@ -105,9 +135,11 @@ namespace game
 					_window.close();
 				}
 			}
+			_camera.setCenter(Vector2f(_p.x, _p.y));
+			_window.setView(_camera);
 			Time::Tick();
 			Update();
-			Display();
+			GameDisplay();
 		}
 	}
 
@@ -125,47 +157,57 @@ namespace game
 				auto e = layer->second.entities.begin();
 				while (e != layer->second.entities.end())
 				{
-					if (e->_collider._isActive)
+					if (e->get().GetCollider()._isActive)
 					{
-						for (geo::Point p: entity->_collider.ReturnPoints())
+						for (geo::Point p: entity->get().GetCollider().ReturnPoints())
 						{
-							if (e->_collider.IsIn(p) && !Contains<Entity>((*e->_collider._collidedEntities.begin()).Switch(NULL), (*e->_collider._collidedEntities.end()).Switch(NULL), *entity))
+							p = geo::Point(p.x + entity->get().GetCollider().x(), p.y + entity->get().GetCollider().y());
+							Entity tmp = (*entity).get();
+							std::vector<Entity *> collided;
+							for (auto val = e->get().GetCollider()._collidedEntities.begin(); val != e->get().GetCollider()._collidedEntities.end(); val++)
 							{
-								auto ptr = geo::Pointer<Entity>(*e);
-								e->_collider.OnCollisionEnter(ptr);
+								collided.push_back(&((*val).get()));
 							}
-							else if (e->_collider.IsIn(p) && Contains<Entity>((*e->_collider._collidedEntities.begin()).Switch(NULL), (*e->_collider._collidedEntities.end()).Switch(NULL), *entity))
+							auto start = collided.begin();
+							auto end = collided.end();
+							if (e->get().GetCollider().IsIn(p) && !std::count(start, end, &tmp))
 							{
-								auto ptr = geo::Pointer<Entity>(*e);
-								e->_collider.OnCollisionStay(ptr);
+								entity->get().GetCollider().OnCollisionEnter(*e);
+							}
+							else if (e->get().GetCollider().IsIn(p) && std::count(start, end, &tmp))
+							{
+								entity->get().GetCollider().OnCollisionStay(*e);
 							}
 
-							else if (Contains<Entity>((*e->_collider._collidedEntities.begin()).Switch(NULL), (*e->_collider._collidedEntities.end()).Switch(NULL), *entity))
+							else if (std::count(start, end, &tmp))
 							{
-								auto ptr = geo::Pointer<Entity>(*e);
-								e->_collider.OnCollisionExit(ptr);
+								entity->get().GetCollider().OnCollisionExit(*e);
 							}
 						}
 					}
 
 					auto mouse = sf::Mouse::getPosition(_window);
-					if (!e->children.size())
+					if (!e->get().children.size())
 					{
-						if (e.IsIn(geo::Point(mouse.x, mouse.y)))
+						if (e->get().GetCollider().IsIn(geo::Point(mouse.x, mouse.y)))
 						{
-							e.
+							e->get().OnMouseOver();
+							if (sf::Mouse::isButtonPressed(sf::Mouse::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Right) || sf::Mouse::isButtonPressed(sf::Mouse::Middle))
+							{
+								e->get().OnMouseDown();
+							}
 						}
 					}
 					
-					if (!e->children.size())
+					if (!e->get().children.size())
 					{
-						e->Update();
+						e->get().Update();
 					}
 
 					else
 					{
-						e->Update();
-						e->UpdateChildren();
+						e->get().Update();
+						e->get().UpdateChildren();
 					}
 					e++;
 				}
@@ -179,5 +221,7 @@ namespace game
 	{
 	}
 
-	
+	void Game::UIDisplay()
+	{
+	}
 }

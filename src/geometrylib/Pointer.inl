@@ -69,7 +69,7 @@ namespace geo
 	}
 
 	template <typename T>
-	unsigned long long Pointer<T>::Size()
+	size_t Pointer<T>::Size()
 	{
 		return size;
 	}

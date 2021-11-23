@@ -75,6 +75,11 @@ namespace geo
 		return Calc::Distance(Origin, p) < Calc::Distance(Origin, *this);
 	}
 
+	Point Point::operator()() const
+	{
+		return Point(x, y);
+	}
+
 	void Point::Move(double offsetX, double offsetY)
 	{
 		this->x += offsetX;
